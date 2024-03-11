@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "shopar-qa"
+version = "0.1.0"
+description = ""
+authors = ["Igor Aradski <igor@deepar.ai>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fake-bpy-module = "^20240215"
+pyperclip = "^1.8.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
