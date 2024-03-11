@@ -1,9 +1,9 @@
 bl_info = {
-    "name": "ShopAR_QA",
+    "name": "shopar_qa",
     "author": "ShopAR",
     "description": "Automatic QA check for ShopAR assets creation.",
     "blender": (2, 80, 0),
-    "version": (0, 0, 8),
+    "version": (0, 0, 9),
     "category": "Object",
 }
 
@@ -17,7 +17,7 @@ from . import utils
 
 
 class ShopAR_QA_Panel(bpy.types.Panel):
-    bl_label = "ShopAR QA"
+    bl_label = f"ShopAR QA v" + '.'.join(map(str, bl_info["version"]))
     bl_idname = "OBJECT_PT_shopar_qa"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
@@ -30,10 +30,10 @@ class ShopAR_QA_Panel(bpy.types.Panel):
     def draw(self, context):
         addon_updater_ops.check_for_update_background()
         layout = self.layout
-        purge = layout.operator(operator="outliner.orphans_purge", text="Clean up")
-        purge.do_local_ids = True
-        purge.do_linked_ids = True
-        purge.do_recursive = True
+        # purge = layout.operator(operator="outliner.orphans_purge", text="Clean up")
+        # purge.do_local_ids = True
+        # purge.do_linked_ids = True
+        # purge.do_recursive = True
         layout.operator("object.move_temples")
         # apply = layout.operator(operator="object.transform_apply")
         # apply.location=True
