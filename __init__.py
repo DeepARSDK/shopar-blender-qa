@@ -1,9 +1,9 @@
 bl_info = {
     "name": "ShopAR_QA",
     "author": "ShopAR",
-    "description": "Automatic ",
+    "description": "Automatic QA check for ShopAR assets creation.",
     "blender": (2, 80, 0),
-    "version": (0, 0, 7),
+    "version": (0, 0, 8),
     "category": "Object",
 }
 
@@ -14,7 +14,6 @@ from bpy.types import Context
 from . import addon_updater_ops
 from . import shopar_qa
 from . import utils
-
 
 
 class ShopAR_QA_Panel(bpy.types.Panel):
@@ -29,6 +28,7 @@ class ShopAR_QA_Panel(bpy.types.Panel):
         return True
 
     def draw(self, context):
+        addon_updater_ops.check_for_update_background()
         layout = self.layout
         purge = layout.operator(operator="outliner.orphans_purge", text="Clean up")
         purge.do_local_ids = True
@@ -65,6 +65,7 @@ class ShopAR_QA_Panel(bpy.types.Panel):
             utils.print_report(self, context, OBJECT_OT_QAGlassesOperator.report)
             if len(OBJECT_OT_QAGlassesOperator.report["ERROR"]) > 0:
                 layout.operator("object.copy_report")
+        addon_updater_ops.update_notice_box_ui(self, context)
 
 
 class OBJECT_OT_QAMoveOrigin(bpy.types.Operator):
@@ -106,20 +107,68 @@ class OBJECT_OT_CopyReport(bpy.types.Operator):
         utils.copy_to_clipboard(text)
         return {"FINISHED"}
 
+@addon_updater_ops.make_annotations
+class ShopARQAPreferences(bpy.types.AddonPreferences):
+    bl_idname = __package__
+
+	# Addon updater preferences.
+    auto_check_update = bpy.props.BoolProperty(
+        name="Auto-check for Update",
+        description="If enabled, auto-check for updates using an interval",
+        default=False)
+
+    updater_interval_months = bpy.props.IntProperty(
+        name='Months',
+        description="Number of months between checking for updates",
+        default=0,
+        min=0)
+
+    updater_interval_days = bpy.props.IntProperty(
+        name='Days',
+        description="Number of days between checking for updates",
+        default=7,
+        min=0,
+        max=31)
+
+    updater_interval_hours = bpy.props.IntProperty(
+        name='Hours',
+        description="Number of hours between checking for updates",
+        default=0,
+        min=0,
+        max=23)
+
+    updater_interval_minutes = bpy.props.IntProperty(
+        name='Minutes',
+        description="Number of minutes between checking for updates",
+        default=0,
+        min=0,
+        max=59)
+    def draw(self, context):
+        layout = self.layout
+
+        addon_updater_ops.update_settings_ui(self, context)
+
+
+classes = (
+    ShopAR_QA_Panel,
+    OBJECT_OT_QAGlassesOperator,
+    OBJECT_OT_CopyReport,
+    OBJECT_OT_QAMoveOrigin,
+    ShopARQAPreferences
+)
+
 
 def register():
     addon_updater_ops.register(bl_info)
-    bpy.utils.register_class(ShopAR_QA_Panel)
-    bpy.utils.register_class(OBJECT_OT_QAGlassesOperator)
-    bpy.utils.register_class(OBJECT_OT_CopyReport)
-    bpy.utils.register_class(OBJECT_OT_QAMoveOrigin)
+    for cls in classes:
+        addon_updater_ops.make_annotations(cls)  # Avoid blender 2.8 warnings.
+        bpy.utils.register_class(cls)
 
 
 def unregister():
-    bpy.utils.unregister_class(ShopAR_QA_Panel)
-    bpy.utils.unregister_class(OBJECT_OT_QAGlassesOperator)
-    bpy.utils.unregister_class(OBJECT_OT_CopyReport)
-    bpy.utils.unregister_class(OBJECT_OT_QAMoveOrigin)
+    addon_updater_ops.unregister()
+    for cls in reversed(classes):
+        bpy.utils.unregister_class(cls)
 
 
 if __name__ == "__main__":
