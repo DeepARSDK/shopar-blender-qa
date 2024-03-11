@@ -231,13 +231,13 @@ def check_model(context: bpy.types.Context):
     return report
 
 
-def update_children(obj, vector):
-    if obj.type == "MESH" and isinstance(obj.data, bpy.types.Mesh):
-        obj.location = -vector
-    else:
-        for c in obj.children:
-            update_children(c, vector)
-
+def cleanup_location(obj: bpy.types.Object):
+    obj.select_set(True)
+    for c in obj.children:
+        c.select_set(True)
+    bpy.ops.object.transform_apply(location=True)
+    for ob in bpy.context.selected_objects:
+        ob.select_set(False)
 
 def move_temples(context: bpy.types.Context):
     for ob in bpy.context.selected_objects:
@@ -251,7 +251,9 @@ def move_temples(context: bpy.types.Context):
         obj.select_set(False)
         if obj.location == global_bbox_center:
             continue
-
+        if obj.location != (0,0,0):
+            cleanup_location(obj)
+            
         obj.location = global_bbox_center
         for child in obj.children:
             child.location = -global_bbox_center

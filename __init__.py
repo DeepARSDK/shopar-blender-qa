@@ -3,7 +3,7 @@ bl_info = {
     "author": "ShopAR",
     "description": "Automatic QA check for ShopAR assets creation.",
     "blender": (2, 80, 0),
-    "version": (0, 0, 10),
+    "version": (0, 1, 0),
     "category": "Object",
 }
 
