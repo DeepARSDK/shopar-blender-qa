@@ -3,7 +3,7 @@ bl_info = {
     "author": "ShopAR",
     "description": "Automatic QA check for ShopAR assets creation.",
     "blender": (2, 80, 0),
-    "version": (0, 1, 0),
+    "version": (0, 1, 1),
     "category": "Object",
 }
 
@@ -41,27 +41,27 @@ class ShopAR_QA_Panel(bpy.types.Panel):
             layout.label(text="Select an object to check")
             OBJECT_OT_QAGlassesOperator.report = {}
             return
+        if (
+            "temple_left" in context.scene.objects
+            and "temple_right" in context.scene.objects
+        ):
+            layout.label(text="Test temple rotation")
+            layout.prop(
+                context.scene.objects["temple_left"],
+                "rotation_quaternion",
+                index=3,
+                text="Left temple rotation",
+            )
+            layout.prop(
+                context.scene.objects["temple_right"],
+                "rotation_quaternion",
+                index=3,
+                text="Right temple rotation",
+            )
         layout.label(text="QA Glasses for ShopAR:")
         layout.operator("object.qa_glasses")
         if OBJECT_OT_QAGlassesOperator.report:
-            layout.separator()
-            if (
-                "temple_left" in context.scene.objects
-                and "temple_right" in context.scene.objects
-            ):
-                layout.label(text="Test temple rotation")
-                layout.prop(
-                    context.scene.objects["temple_left"],
-                    "rotation_quaternion",
-                    index=3,
-                    text="Left temple rotation",
-                )
-                layout.prop(
-                    context.scene.objects["temple_right"],
-                    "rotation_quaternion",
-                    index=3,
-                    text="Right temple rotation",
-                )
+            
             utils.print_report(self, context, OBJECT_OT_QAGlassesOperator.report)
             if len(OBJECT_OT_QAGlassesOperator.report["ERROR"]) > 0:
                 layout.operator("object.copy_report")
@@ -126,7 +126,7 @@ class ShopARQAPreferences(bpy.types.AddonPreferences):
     updater_interval_days = bpy.props.IntProperty(
         name='Days',
         description="Number of days between checking for updates",
-        default=3,
+        default=1,
         min=0,
         max=31)
 

@@ -89,7 +89,7 @@ class SingletonUpdater:
         # Settings for the frequency of automated background checks.
         self._check_interval_enabled = False
         self._check_interval_months = 0
-        self._check_interval_days = 7
+        self._check_interval_days = 1
         self._check_interval_hours = 0
         self._check_interval_minutes = 0
 

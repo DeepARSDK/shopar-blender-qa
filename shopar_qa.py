@@ -146,9 +146,9 @@ def check_scale(obj: bpy.types.Object, output):
 def check_location(obj: bpy.types.Object, output):
     for child in obj.children:
         check_location(child, output)
-    if obj.location != Vector((0, 0, 0)) and obj.name not in temple_names:
-        output.append(f'2.1 Invalid location {obj.location} of object "{obj.name}"')
-    elif obj.location == Vector((0, 0, 0)) and obj.name in temple_names:
+    # if obj.location != Vector((0, 0, 0)) and obj.name not in temple_names:
+    #     output.append(f'2.1 Invalid location {obj.location} of object "{obj.name}"')
+    if obj.location == Vector((0, 0, 0)) and obj.name in temple_names:
         output.append(f'3.3  Temple group "{obj.name}" location in world origin')
     return output
 
@@ -187,6 +187,8 @@ def check_model(context: bpy.types.Context):
     if len(location_output) > 0:
         for error in location_output:
             report["ERROR"].append(error)
+    elif obj.location != Vector((0, 0, 0)):
+        report["ERROR"].append(f"Root location {obj.location} not (0,0,0)")
     else:
         report["PASSED"].append(
             f"2.1/2.3 Origin of all nodes in (0,0,0), except temples"
