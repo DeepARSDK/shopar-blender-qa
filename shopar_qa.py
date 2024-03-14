@@ -206,10 +206,11 @@ def check_model(context: bpy.types.Context):
     num_triangles, num_ngons = check_faces(obj)
 
     # 3.12
-    if num_triangles > 20_000:
+    MAX_NUM_TRIANGLES = 25_000
+    if num_triangles > MAX_NUM_TRIANGLES:
         report["ERROR"].append(f"3.12 Number of triangles too big: {num_triangles}")
     else:
-        report["PASSED"].append(f"3.12 Number of triangles <20k: {num_triangles}")
+        report["PASSED"].append(f"3.12 Number of triangles <25k: {num_triangles}")
 
     # 3.13
     if num_ngons > 0:
