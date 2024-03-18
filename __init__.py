@@ -3,7 +3,7 @@ bl_info = {
     "author": "ShopAR",
     "description": "Automatic QA check for ShopAR assets creation.",
     "blender": (2, 80, 0),
-    "version": (0, 1, 2),
+    "version": (0, 1, 3),
     "category": "Object",
 }
 
@@ -39,7 +39,7 @@ class ShopAR_QA_Panel(bpy.types.Panel):
         # apply.location=True
         if len(context.selected_objects) == 0:
             layout.label(text="Select an object to check")
-            OBJECT_OT_QAGlassesOperator.report = {}
+            OBJECT_OT_QAGlassesOperator.QA_report = {}
             return
         if (
             "temple_left" in context.scene.objects
@@ -60,10 +60,10 @@ class ShopAR_QA_Panel(bpy.types.Panel):
             )
         layout.label(text="QA Glasses for ShopAR:")
         layout.operator("object.qa_glasses")
-        if OBJECT_OT_QAGlassesOperator.report:
+        if OBJECT_OT_QAGlassesOperator.QA_report:
             
-            utils.print_report(self, context, OBJECT_OT_QAGlassesOperator.report)
-            if len(OBJECT_OT_QAGlassesOperator.report["ERROR"]) > 0:
+            utils.print_report(self, context, OBJECT_OT_QAGlassesOperator.QA_report)
+            if len(OBJECT_OT_QAGlassesOperator.QA_report["ERROR"]) > 0:
                 layout.operator("object.copy_report")
         addon_updater_ops.update_notice_box_ui(self, context)
 
@@ -83,14 +83,14 @@ class OBJECT_OT_QAGlassesOperator(bpy.types.Operator):
     bl_idname = "object.qa_glasses"
     bl_label = "QA Glasses model"
     bl_description = "QA Glasses for ShopAR"
-    report: dict = {}
+    QA_report: dict = {}
 
     def execute(self, context: Context) -> Set[int] | Set[str]:
         if len(context.selected_objects) == 0:
             return {"CANCELLED"}
-        report = {}
-        report = shopar_qa.check_model(context=context)
-        self.__class__.report = report
+        QA_report = {}
+        QA_report = shopar_qa.check_model(context=context)
+        self.__class__.QA_report = QA_report
         self.report({"INFO"}, "Finished automatic QA")
         return {"FINISHED"}
 
@@ -102,7 +102,7 @@ class OBJECT_OT_CopyReport(bpy.types.Operator):
 
     def execute(self, context: bpy.types.Context) -> Set[int] | Set[str]:
         text = "\n\n".join(
-            [item for item in OBJECT_OT_QAGlassesOperator.report["ERROR"]]
+            [item for item in OBJECT_OT_QAGlassesOperator.QA_report["ERROR"]]
         )
         utils.copy_to_clipboard(text)
         return {"FINISHED"}
