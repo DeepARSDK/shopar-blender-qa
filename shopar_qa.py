@@ -184,11 +184,12 @@ def check_model(context: bpy.types.Context):
 
     # 2.3
     location_output = check_location(obj, [])
-    if len(location_output) > 0:
-        for error in location_output:
-            report["ERROR"].append(error)
-    elif obj.location != Vector((0, 0, 0)):
-        report["ERROR"].append(f"Root location {obj.location} not (0,0,0)")
+    if obj.location != Vector((0, 0, 0)) or len(location_output) > 0:
+        if obj.location != Vector((0, 0, 0)):
+            report["ERROR"].append(f"Root location {obj.location} not (0,0,0)")
+        if len(location_output) > 0:
+            for error in location_output:
+                report["ERROR"].append(error)
     else:
         report["PASSED"].append(
             f"2.1/2.3 Origin of all nodes in (0,0,0), except temples"
@@ -242,6 +243,7 @@ def cleanup_location(obj: bpy.types.Object):
     for ob in bpy.context.selected_objects:
         ob.select_set(False)
 
+
 def move_temples(context: bpy.types.Context):
     for ob in bpy.context.selected_objects:
         ob.select_set(False)
@@ -254,9 +256,9 @@ def move_temples(context: bpy.types.Context):
         obj.select_set(False)
         if obj.location == global_bbox_center:
             continue
-        if obj.location != (0,0,0):
+        if obj.location != (0, 0, 0):
             cleanup_location(obj)
-            
+
         obj.location = global_bbox_center
         for child in obj.children:
             child.location = -global_bbox_center
