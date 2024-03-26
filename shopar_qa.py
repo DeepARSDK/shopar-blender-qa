@@ -3,6 +3,8 @@ import bpy
 from mathutils import Vector, Matrix
 import difflib
 
+from . import utils
+
 allowed_groups = ["frame", "lenses", "temples"]
 temple_names = ["temple_left", "temple_right"]
 allowed_nodes = {
@@ -64,7 +66,7 @@ def check_names(obj: bpy.types.Object):
         if group.name not in allowed_groups:
             output.append(
                 invalidate(group.name, allowed_groups)
-                + f' Skipping the check of children of "{group.name}".'
+                + f' Skipping the check of potential children of "{group.name}".'
             )
             continue
         if group.name == "temples":
@@ -74,7 +76,7 @@ def check_names(obj: bpy.types.Object):
                 if temples_group.name not in temple_names:
                     output.append(
                         invalidate(temples_group.name, temple_names)
-                        + f' Skipping the check of children of "{temples_group.name}".'
+                        + f' Skipping the check of potential children of "{temples_group.name}".'
                     )
                     continue
                 for node in temples_group.children:
@@ -168,8 +170,7 @@ def check_model(context: bpy.types.Context):
     report = {"ERROR": [], "INFO": [], "WARNING": [], "PASSED": []}
     obj = context.active_object
     if obj.parent is not None:
-        while obj.parent is not None:
-            obj = obj.parent
+        obj = utils.get_object_root(obj)
         report["WARNING"].append(
             f'Didn\'t select root node, running the check on the root parent "{obj.name[:20]}..."'
         )
@@ -235,33 +236,6 @@ def check_model(context: bpy.types.Context):
     return report
 
 
-def cleanup_location(obj: bpy.types.Object):
-    obj.select_set(True)
-    for c in obj.children:
-        c.select_set(True)
-    bpy.ops.object.transform_apply(location=True)
-    for ob in bpy.context.selected_objects:
-        ob.select_set(False)
 
 
-def move_temples(context: bpy.types.Context):
-    for ob in bpy.context.selected_objects:
-        ob.select_set(False)
 
-    for side in ["left", "right"]:
-        screw = bpy.data.objects[f"screw_{side}"]
-        local_bbox_center = 0.125 * sum((Vector(b) for b in screw.bound_box), Vector())
-        global_bbox_center = screw.matrix_world @ local_bbox_center
-        obj = bpy.data.objects[f"temple_{side}"]
-        obj.select_set(False)
-        if obj.location == global_bbox_center:
-            continue
-        if obj.location != (0, 0, 0):
-            cleanup_location(obj)
-
-        obj.location = global_bbox_center
-        for child in obj.children:
-            child.location = -global_bbox_center
-            child.select_set(True)
-
-    bpy.ops.object.transform_apply(location=True)
