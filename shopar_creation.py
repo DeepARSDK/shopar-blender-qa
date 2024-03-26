@@ -2,6 +2,7 @@ from typing import Set
 import bpy
 
 from . import utils
+from . import shopar_qa
 from mathutils import Vector
 
 hierarchy_parents = {
@@ -68,7 +69,7 @@ def place_in_hierarchy(
 
 
 def move_temples(context: bpy.types.Context):
-    for ob in bpy.context.selected_objects:
+    for ob in context.selected_objects:
         ob.select_set(False)
 
     for side in ["left", "right"]:
@@ -77,9 +78,11 @@ def move_temples(context: bpy.types.Context):
         global_bbox_center = screw.matrix_world @ local_bbox_center #type: ignore
         obj = bpy.data.objects[f"temple_{side}"]
         obj.select_set(False)
+        if len(shopar_qa.check_scale(utils.get_object_root(obj), [])) > 0:
+            return False
         if obj.location == global_bbox_center:
             continue
-        if obj.location != (0, 0, 0):
+        if obj.location != Vector((0, 0, 0)):
             utils.cleanup_location(obj)
 
         obj.location = global_bbox_center
@@ -88,3 +91,4 @@ def move_temples(context: bpy.types.Context):
             child.select_set(True)
 
     bpy.ops.object.transform_apply(location=True)
+    return True

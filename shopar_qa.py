@@ -50,7 +50,7 @@ obligatory_names = {
 }
 
 
-def check_names(obj: bpy.types.Object):
+def check_names(obj: bpy.types.Object) -> list:
     output = []
     obligatory_names_left = set(obligatory_names)
 
@@ -105,7 +105,7 @@ def check_names(obj: bpy.types.Object):
     return output
 
 
-def check_faces(obj):
+def check_faces(obj) -> tuple[int, int]:
     num_triangles_total = 0
     num_ngons_total = 0
 
@@ -124,7 +124,7 @@ def check_faces(obj):
     return num_triangles_total, num_ngons_total
 
 
-def count_materials(obj, unique_materials: Set):
+def count_materials(obj, unique_materials: Set) -> int:
     # Recursively count materials in children
     if obj.type == "MESH":
         for slot in obj.material_slots:
@@ -137,7 +137,7 @@ def count_materials(obj, unique_materials: Set):
     return len(unique_materials)
 
 
-def check_scale(obj: bpy.types.Object, output):
+def check_scale(obj: bpy.types.Object, output: list) -> list:
     for child in obj.children:
         check_scale(child, output)
     if obj.scale != Vector((1, 1, 1)):
@@ -145,7 +145,7 @@ def check_scale(obj: bpy.types.Object, output):
     return output
 
 
-def check_location(obj: bpy.types.Object, output):
+def check_location(obj: bpy.types.Object, output: list):
     for child in obj.children:
         check_location(child, output)
     # if obj.location != Vector((0, 0, 0)) and obj.name not in temple_names:

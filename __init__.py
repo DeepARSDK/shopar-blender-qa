@@ -55,13 +55,20 @@ class ShopAR_Creation_Panel(bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
         # Move temples to screws button
-        layout.operator("object.move_temples")
-        layout.separator()
-        for item in utils.mesh_name_items:
-            if item[0] is None:
-                layout.label(text=item[1])
-            else:
-                layout.operator(operator=f"object.{item[0]}")
+        if (
+            "temple_left" in context.scene.objects  # type: ignore
+            and "screw_left" in context.scene.objects #type: ignore
+            and "temple_right" in context.scene.objects  # type: ignore
+            and "screw_right" in context.scene.objects #type: ignore
+        ):
+            layout.operator("object.move_temples")
+            layout.separator()
+        if context.active_object is not None:
+            for item in utils.mesh_name_items:
+                if item[0] is None:
+                    layout.label(text=item[1])
+                else:
+                    layout.operator(operator=f"object.{item[0]}")
 
 
 class ShopAR_QA_Panel(bpy.types.Panel):
@@ -123,9 +130,12 @@ class OBJECT_OT_MoveTemplesOperator(bpy.types.Operator):
     bl_description = "Move temple groups to the approximate location of screws."
 
     def execute(self, context: Context) -> Set[int] | Set[str]:
-        shopar_creation.move_temples(context=context)
-        self.report({"INFO"}, "Moved temples to screws")
-        return {"FINISHED"}
+        if shopar_creation.move_temples(context=context):
+            self.report({"INFO"}, "Moved temples to screws")
+            return {"FINISHED"}
+        else:
+            self.report({"ERROR"}, "Set scale of all objects to (1,1,1) before continuing.")
+            return {"CANCELLED"}
 
 
 class OBJECT_OT_QAGlassesOperator(bpy.types.Operator):
