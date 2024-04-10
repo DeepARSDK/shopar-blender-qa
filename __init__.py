@@ -36,6 +36,7 @@ class ShopAR_Panel(bpy.types.Panel):
     bl_category = "ShopAR QA"
 
     def draw(self, context: Context):
+        addon_updater_ops.update_notice_box_ui(self, context)
         return
 
 
@@ -123,7 +124,6 @@ class ShopAR_QA_Panel(bpy.types.Panel):
             utils.print_report(self, context, OBJECT_OT_QAGlassesOperator.QA_report)
             if len(OBJECT_OT_QAGlassesOperator.QA_report["ERROR"]) > 0:
                 layout.operator("object.copy_report")
-        addon_updater_ops.update_notice_box_ui(self, context)
 
 
 class OBJECT_OT_MoveTemplesOperator(bpy.types.Operator):
