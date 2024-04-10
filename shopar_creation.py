@@ -52,6 +52,7 @@ def place_in_hierarchy(
 
                 frame_empty.empty_display_size = 0.2
                 frame_empty.empty_display_type = "PLAIN_AXES"
+                frame_empty.rotation_mode = "QUATERNION"
 
                 place_in_hierarchy(frame_empty, parent_name, context, operator)
                 obj.parent = frame_empty
@@ -75,10 +76,11 @@ def move_temples(context: bpy.types.Context):
     for side in ["left", "right"]:
         screw = bpy.data.objects[f"screw_{side}"]
         local_bbox_center = 0.125 * sum((Vector(b) for b in screw.bound_box), Vector())
-        global_bbox_center = screw.matrix_world @ local_bbox_center #type: ignore
+        global_bbox_center = screw.matrix_world @ local_bbox_center  # type: ignore
         obj = bpy.data.objects[f"temple_{side}"]
         obj.select_set(False)
-        if len(shopar_qa.check_scale(utils.get_object_root(obj), [])) > 0:
+        utils.cleanup_location(obj)
+        if len(shopar_qa.check_scale(obj, [])) > 0:
             return False
         if obj.location == global_bbox_center:
             continue

@@ -3,7 +3,7 @@ bl_info = {
     "author": "ShopAR",
     "description": "Automatic QA check for ShopAR assets creation.",
     "blender": (2, 80, 0),
-    "version": (0, 1, 4),
+    "version": (0, 1, 5),
     "category": "Object",
 }
 
@@ -57,9 +57,9 @@ class ShopAR_Creation_Panel(bpy.types.Panel):
         # Move temples to screws button
         if (
             "temple_left" in context.scene.objects  # type: ignore
-            and "screw_left" in context.scene.objects #type: ignore
+            and "screw_left" in context.scene.objects  # type: ignore
             and "temple_right" in context.scene.objects  # type: ignore
-            and "screw_right" in context.scene.objects #type: ignore
+            and "screw_right" in context.scene.objects  # type: ignore
         ):
             layout.operator("object.move_temples")
             layout.separator()
@@ -93,19 +93,21 @@ class ShopAR_QA_Panel(bpy.types.Panel):
             "temple_left" in context.scene.objects  # type: ignore
             and "temple_right" in context.scene.objects  # type: ignore
         ):
-            layout.label(text="Test temple rotation")
-            layout.prop(
-                context.scene.objects["temple_left"],
-                "rotation_quaternion",
-                index=3,
-                text="Left temple rotation",
-            )
-            layout.prop(
-                context.scene.objects["temple_right"],
-                "rotation_quaternion",
-                index=3,
-                text="Right temple rotation",
-            )
+            layout.label(text="Test temple rotation (quaternion mode)")
+            if context.scene.objects["temple_left"].rotation_mode == "QUATERNION":
+                layout.prop(
+                    context.scene.objects["temple_left"],
+                    "rotation_quaternion",
+                    index=3,
+                    text="Left temple rotation",
+                )
+            if context.scene.objects["temple_right"].rotation_mode == "QUATERNION":
+                layout.prop(
+                    context.scene.objects["temple_right"],
+                    "rotation_quaternion",
+                    index=3,
+                    text="Right temple rotation",
+                )
 
         # QA glasses
         if len(context.selected_objects) == 0:  # type: ignore
@@ -134,7 +136,9 @@ class OBJECT_OT_MoveTemplesOperator(bpy.types.Operator):
             self.report({"INFO"}, "Moved temples to screws")
             return {"FINISHED"}
         else:
-            self.report({"ERROR"}, "Set scale of all objects to (1,1,1) before continuing.")
+            self.report(
+                {"ERROR"}, "Set scale of nodes in temple groups to (1,1,1) before continuing."
+            )
             return {"CANCELLED"}
 
 

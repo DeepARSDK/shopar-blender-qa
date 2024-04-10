@@ -56,7 +56,7 @@ def check_names(obj: bpy.types.Object) -> list:
 
     def invalidate(name, possible):
         fix = difflib.get_close_matches(name, possible, 1)
-        return f'3.1 Invalid name: "{name}"' + (
+        return f'Invalid name: "{name}"' + (
             f', did you mean "{fix[0]}"?' if len(fix) > 0 else ""
         )
 
@@ -100,7 +100,7 @@ def check_names(obj: bpy.types.Object) -> list:
 
     if len(obligatory_names_left) > 0:
         for obligatory_name in obligatory_names_left:
-            output.append(f"3.1 Missing node {obligatory_name}")
+            output.append(f"Missing node {obligatory_name}")
 
     return output
 
@@ -141,7 +141,7 @@ def check_scale(obj: bpy.types.Object, output: list) -> list:
     for child in obj.children:
         check_scale(child, output)
     if obj.scale != Vector((1, 1, 1)):
-        output.append(f'2.1 Invalid scale {obj.scale} of object "{obj.name}"')
+        output.append(f'Invalid scale {obj.scale} of object "{obj.name}"')
     return output
 
 
@@ -151,7 +151,7 @@ def check_location(obj: bpy.types.Object, output: list):
     # if obj.location != Vector((0, 0, 0)) and obj.name not in temple_names:
     #     output.append(f'2.1 Invalid location {obj.location} of object "{obj.name}"')
     if obj.location == Vector((0, 0, 0)) and obj.name in temple_names:
-        output.append(f'3.3  Temple group "{obj.name}" location in world origin')
+        output.append(f'Temple group "{obj.name}" location in world origin')
     return output
 
 
@@ -196,46 +196,28 @@ def check_model(context: bpy.types.Context):
             f"2.1/2.3 Origin of all nodes in (0,0,0), except temples"
         )
 
-    # 3.1
+    # check naming and hierarchy
     names_report = check_names(obj)
     if len(names_report) == 0:
-        report["PASSED"].append("3.1 No invalid names, contains obligatory nodes")
-        report["PASSED"].append("3.2 Temples groups existing")
+        report["PASSED"].append("No invalid names, contains obligatory nodes")
+        report["PASSED"].append("Temples groups existing")
     else:
         for name in names_report:
             report["ERROR"].append(name)
 
+
+    # only triangles and number of triangles
+    MAX_NUM_TRIANGLES = 100_000
+    
     num_triangles, num_ngons = check_faces(obj)
-
-    # 3.12
-    MAX_NUM_TRIANGLES = 25_000
     if num_triangles > MAX_NUM_TRIANGLES:
-        report["ERROR"].append(f"3.12 Number of triangles too big: {num_triangles}")
+        report["ERROR"].append(f"Number of triangles too big: {num_triangles}")
     else:
-        report["PASSED"].append(f"3.12 Number of triangles <25k: {num_triangles}")
+        report["PASSED"].append(f"Number of triangles <{MAX_NUM_TRIANGLES}: {num_triangles}")
 
-    # 3.13
     if num_ngons > 0:
-        report["ERROR"].append(f"3.13 Number of ngons >0: {num_ngons}")
+        report["ERROR"].append(f"Number of ngons >0: {num_ngons}")
     else:
-        report["PASSED"].append("3.13. All faces are triangles")
+        report["PASSED"].append("All faces are triangles")
 
-    # 4.1
-    num_uv_maps = check_uv(obj, set())
-    if num_uv_maps > 1:
-        report["ERROR"].append(f"4.1 Number of UV maps >1: {num_uv_maps}")
-    else:
-        report["PASSED"].append("4.1 Number of UV maps: 1")
-
-    # 5.12
-    num_materials = count_materials(obj, set())
-    if num_materials != 1:
-        report["ERROR"].append(f"5.12 Number of materials: {num_materials}")
-    else:
-        report["PASSED"].append(f"5.12 Number of materials: {num_materials}")
     return report
-
-
-
-
-
