@@ -3,7 +3,7 @@ bl_info = {
     "author": "ShopAR",
     "description": "Automatic QA check for ShopAR assets creation.",
     "blender": (2, 80, 0),
-    "version": (0, 1, 5),
+    "version": (0, 1, 6),
     "category": "Object",
 }
 
@@ -22,7 +22,7 @@ def operator_execute(self, context: Context) -> Set[int] | Set[str]:
     original_name = root.name
     root.name = "Model"
     result = shopar_creation.place_in_hierarchy(
-        context.active_object, self.part, context=context, operator=self
+        context.active_object, self.part, context=context, report=self.report
     )
     root.name = original_name
     return result
@@ -36,6 +36,7 @@ class ShopAR_Panel(bpy.types.Panel):
     bl_category = "ShopAR QA"
 
     def draw(self, context: Context):
+        addon_updater_ops.check_for_update_background()
         addon_updater_ops.update_notice_box_ui(self, context)
         return
 
@@ -64,13 +65,19 @@ class ShopAR_Creation_Panel(bpy.types.Panel):
         ):
             layout.operator("object.move_temples")
             layout.separator()
+        if "temple_left" in context.scene.objects: # type: ignore
+            layout.operator('object.mirror_left_to_right')
+        if "temple_right" in context.scene.objects: # type: ignore
+            layout.operator('object.mirror_right_to_left')
+
+
         if context.active_object is not None:
             for item in utils.mesh_name_items:
                 if item[0] is None:
                     layout.label(text=item[1])
                 else:
                     layout.operator(operator=f"object.{item[0]}")
-
+            
 
 class ShopAR_QA_Panel(bpy.types.Panel):
     bl_label = f"ShopAR QA tools"
@@ -86,7 +93,6 @@ class ShopAR_QA_Panel(bpy.types.Panel):
         return True
 
     def draw(self, context):
-        addon_updater_ops.check_for_update_background()
         layout = self.layout
 
         # Temples rotation
@@ -170,6 +176,22 @@ class OBJECT_OT_CopyReportOperator(bpy.types.Operator):
         utils.copy_to_clipboard(text)
         return {"FINISHED"}
 
+class OBJECT_OT_MirrorGlassesRightToLeft(bpy.types.Operator):
+    bl_idname = "object.mirror_right_to_left"
+    bl_label = "Mirror Right Temple To Left"
+    bl_description = "Mirror right temple of glasses to the right. Components must be named after the ShopAR specification."
+    def execute(self, context: Context) -> Set[int] | Set[str]:
+        shopar_creation.mirrorRightToLeft(context=context)
+        return {"FINISHED"}
+
+class OBJECT_OT_MirrorGlassesLeftToRight(bpy.types.Operator):
+    bl_idname = "object.mirror_left_to_right"
+    bl_label = "Mirror Left Temple to Right"
+    bl_description = "Mirror left components of glasses to right. Components must be named after the ShopAR specification."
+    def execute(self, context: Context) -> Set[int] | Set[str]:
+        shopar_creation.mirrorLeftToRight(context=context)
+        return {"FINISHED"}
+    
 
 @addon_updater_ops.make_annotations
 class ShopAR_QA_Preferences(bpy.types.AddonPreferences):
@@ -227,6 +249,8 @@ classes = [
     OBJECT_OT_CopyReportOperator,
     OBJECT_OT_MoveTemplesOperator,
     ShopAR_QA_Preferences,
+    OBJECT_OT_MirrorGlassesLeftToRight,
+    OBJECT_OT_MirrorGlassesRightToLeft,
 ]
 
 
@@ -246,7 +270,8 @@ def register():
                 "execute": operator_execute,
             },
         )
-        classes.append(new_class)
+        if new_class not in classes:
+            classes.append(new_class)
     for cls in classes:
         addon_updater_ops.make_annotations(cls)  # Avoid blender 2.8 warnings.
         bpy.utils.register_class(cls)

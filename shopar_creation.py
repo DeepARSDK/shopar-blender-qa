@@ -1,5 +1,6 @@
 from typing import Set
 import bpy
+import bmesh
 
 from . import utils
 from . import shopar_qa
@@ -37,7 +38,7 @@ hierarchy_parents = {
 
 
 def place_in_hierarchy(
-    obj, name: str, context: bpy.types.Context, operator: bpy.types.Operator
+    obj, name: str, context: bpy.types.Context, report = None
 ) -> Set[str]:
     if obj:
         if name in hierarchy_parents:
@@ -54,16 +55,18 @@ def place_in_hierarchy(
                 frame_empty.empty_display_type = "PLAIN_AXES"
                 frame_empty.rotation_mode = "QUATERNION"
 
-                place_in_hierarchy(frame_empty, parent_name, context, operator)
+                place_in_hierarchy(frame_empty, parent_name, context, report)
                 obj.parent = frame_empty
         else:
-            operator.report(
-                {"ERROR"},
-                f"Object '{name}' does not have a defined parent in the hierarchy",
-            )
+            if report:
+                report(
+                    {"ERROR"},
+                    f"Object '{name}' does not have a defined parent in the hierarchy",
+                )
             return {"CANCELLED"}
     else:
-        operator.report({"ERROR"}, "No active object selected")
+        if report:
+            report({"ERROR"}, "No active object selected")
         return {"CANCELLED"}
 
     return {"FINISHED"}
@@ -94,3 +97,63 @@ def move_temples(context: bpy.types.Context):
 
     bpy.ops.object.transform_apply(location=True)
     return True
+
+def mirrorObjToRight(obj: bpy.types.Object, context: bpy.types.Context):
+    new_obj: bpy.types.Object = obj.copy()
+    new_obj.name = obj.name.replace('left', 'right')
+    if obj.data:
+        new_obj.data = obj.data.copy()
+    new_obj.animation_data_clear()
+    bpy.context.scene.collection.objects.link(new_obj)
+    place_in_hierarchy(new_obj, new_obj.name, context)
+    if new_obj.type == 'MESH':
+        active_obj =  bpy.context.active_object
+        bpy.context.view_layer.objects.active = new_obj
+        bpy.ops.object.mode_set(mode='EDIT')
+
+        me: bpy.types.Mesh = new_obj.data
+        bm = bmesh.from_edit_mesh(me)
+        for v in bm.verts:
+            v.co.x *= -1
+        bmesh.update_edit_mesh(me)
+        bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.context.view_layer.objects.active = active_obj
+        
+    new_obj.location = (-obj.location[0], obj.location[1], obj.location[2])
+
+
+def mirrorObjToLeft(obj: bpy.types.Object, context: bpy.types.Context):
+    new_obj: bpy.types.Object = obj.copy()
+    new_obj.name = obj.name.replace('right', 'left')
+    if obj.data:
+        new_obj.data = obj.data.copy()
+    new_obj.animation_data_clear()
+    bpy.context.scene.collection.objects.link(new_obj)
+    place_in_hierarchy(new_obj, new_obj.name, context)
+    if new_obj.type == 'MESH':
+        active_obj =  bpy.context.active_object
+        bpy.context.view_layer.objects.active = new_obj
+        bpy.ops.object.mode_set(mode='EDIT')
+
+        me: bpy.types.Mesh = new_obj.data
+        bm = bmesh.from_edit_mesh(me)
+        for v in bm.verts:
+            v.co.x *= -1
+        bmesh.update_edit_mesh(me)
+        bpy.ops.object.mode_set(mode='OBJECT')
+        bpy.context.view_layer.objects.active = active_obj
+        
+    new_obj.location = (-obj.location[0], obj.location[1], obj.location[2])
+
+
+def mirrorLeftToRight(context:bpy.types.Context):
+    left_temple_obj = bpy.data.objects['temple_left']
+    mirrorObjToRight(left_temple_obj, context)
+    for obj in left_temple_obj.children:
+        mirrorObjToRight(obj, context)
+
+def mirrorRightToLeft(context: bpy.types.Context):
+    right_temple_obj = bpy.data.objects['temple_right']
+    mirrorObjToLeft(right_temple_obj, context)
+    for obj in right_temple_obj.children:
+        mirrorObjToLeft(obj, context)

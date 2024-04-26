@@ -43,6 +43,9 @@ obligatory_names = {
     "temple_left",
     "temple_right",
     "front_rim",
+    # TODO add required nose pads
+    # "nose_pad_left",
+    # "nose_pad_right",
     "lens_left",
     "lens_right",
     "temple_left_outer",
@@ -175,7 +178,7 @@ def check_model(context: bpy.types.Context):
             f'Didn\'t select root node, running the check on the root parent "{obj.name[:20]}..."'
         )
 
-    # 2.1
+    # TODO only for root
     scale_output = check_scale(obj, [])
     if len(scale_output) > 0:
         for error in scale_output:
@@ -183,7 +186,7 @@ def check_model(context: bpy.types.Context):
     else:
         report["PASSED"].append(f"2.1 Scale of all nodes = 1")
 
-    # 2.3
+    # TODO only for root
     location_output = check_location(obj, [])
     if obj.location != Vector((0, 0, 0)) or len(location_output) > 0:
         if obj.location != Vector((0, 0, 0)):
@@ -205,15 +208,16 @@ def check_model(context: bpy.types.Context):
         for name in names_report:
             report["ERROR"].append(name)
 
-
     # only triangles and number of triangles
     MAX_NUM_TRIANGLES = 100_000
-    
+
     num_triangles, num_ngons = check_faces(obj)
     if num_triangles > MAX_NUM_TRIANGLES:
         report["ERROR"].append(f"Number of triangles too big: {num_triangles}")
     else:
-        report["PASSED"].append(f"Number of triangles <{MAX_NUM_TRIANGLES}: {num_triangles}")
+        report["PASSED"].append(
+            f"Number of triangles <{MAX_NUM_TRIANGLES}: {num_triangles}"
+        )
 
     if num_ngons > 0:
         report["ERROR"].append(f"Number of ngons >0: {num_ngons}")
